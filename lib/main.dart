@@ -5,8 +5,10 @@ import 'package:telelook/models/script.dart';
 import 'package:telelook/screens/scripts_list_screen.dart';
 import 'package:telelook/screens/edit_script_screen.dart';
 import 'package:telelook/screens/camera_reading_screen.dart';
+import 'package:telelook/screens/splash_screen.dart';
 
 enum AppScreen {
+  splash,
   scriptsList,
   editScript,
   teleprompter
@@ -58,7 +60,7 @@ class TeleprompterNavigationFlow extends StatefulWidget {
 }
 
 class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow> {
-  AppScreen _currentScreen = AppScreen.scriptsList;
+  AppScreen _currentScreen = AppScreen.splash;
   late List<TeleprompterScript> _scripts;
   int _activeScriptIndex = 0;
   
@@ -106,6 +108,10 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
   @override
   Widget build(BuildContext context) {
     switch (_currentScreen) {
+      case AppScreen.splash:
+        return SplashScreen(
+          onFinished: () => _navigateTo(AppScreen.scriptsList),
+        );
       case AppScreen.scriptsList:
         return ScriptsListScreen(
           scripts: _scripts,
