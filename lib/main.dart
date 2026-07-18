@@ -134,6 +134,7 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
           onSeeTemplates: () => _navigateTo(AppScreen.allTemplates),
           onSelectAbout: () => _navigateTo(AppScreen.about),
           onSelectPrivacy: () => _navigateTo(AppScreen.privacy),
+          onCreateNewProject: () => _navigateTo(AppScreen.videoClipsList), // Open Script/Record workspace!
         );
       case AppScreen.allTemplates:
         return AllTemplatesScreen(
@@ -148,8 +149,8 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
         );
       case AppScreen.videoClipsList:
         return VideoClipsScreen(
-          onBack: () => _navigateTo(AppScreen.projectDetails),
-          onAskToEdit: () => _navigateTo(AppScreen.wizardStep1),
+          onBack: () => _navigateTo(AppScreen.home),
+          onStartRecording: () => _navigateTo(AppScreen.teleprompter),
         );
       case AppScreen.wizardStep1:
         return WizardStep1Screen(

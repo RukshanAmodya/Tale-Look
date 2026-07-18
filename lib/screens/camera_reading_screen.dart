@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
@@ -28,7 +29,7 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
   bool _isRecording = false;
   int _selectedCameraIndex = 0;
   
-  int _wpm = 140; // Default to 140 WPM matching mockup
+  int _wpm = 140; 
   double _fontSize = 26.0;
   bool _isScrolling = false;
   
@@ -43,12 +44,14 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
   Timer? _countdownTimer;
   
   late AnimationController _recordPulseController;
+  late AnimationController _audioLevelController; // Animated audio visualizer
 
   double _faceGuideX = 0.5;
   double _faceGuideY = 0.45;
 
   bool _showSettingsPanel = false;
   bool _highlightImportantWords = true;
+  Color _textColor = Colors.white;
 
   List<CameraDescription> _cameras = [];
 
@@ -62,6 +65,11 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     _recordPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    _audioLevelController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
     )..repeat(reverse: true);
     
     _initializeCamera();
@@ -127,6 +135,7 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     _scrollController.dispose();
     _cameraController?.dispose();
     _recordPulseController.dispose();
+    _audioLevelController.dispose();
     super.dispose();
   }
   
@@ -298,21 +307,24 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Camera Viewport
+          // 1. Live Camera Preview
           _buildCameraPreview(size),
           
-          // 2. Face alignment target circle guide
+          // 2. Custom Painted orange target guideline circle
           _buildFaceGuidelineOverlay(),
           
-          // 3. Script Text Overlay (No black box backdrop!)
+          // 3. Prompter Text Overlay (Placed at top left directly over preview, no black box!)
           _buildTeleprompterOverlay(size),
           
-          // 4. Custom Mockup Control Elements
-          _buildMockupControlOverlays(isLandscape, size),
+          // 4. Portrait Custom Dribbble Layout Controls
+          if (!isLandscape) _buildPortraitDribbbleControls(size),
+          
+          // 5. Landscape Controls fallback
+          if (isLandscape) _buildLandscapeMockupOverlays(size),
           
           if (_countdownSeconds > 0) _buildCountdownOverlay(),
           
-          // 5. Sliding Prompter Settings Drawer matching third mockup
+          // 6. Sliding Prompter Settings Drawer matching Dribbble mockups
           if (_showSettingsPanel) _buildSettingsDrawerOverlay(isLandscape, size),
         ],
       ),
@@ -353,17 +365,16 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     );
   }
 
-  // Pure clean text overlay with NO background containers
   Widget _buildTeleprompterOverlay(Size size) {
     bool isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-    double textContainerHeight = size.height * (isLandscape ? 0.60 : 0.35);
-    double containerTop = size.height * (isLandscape ? 0.20 : 0.25);
+    double textContainerHeight = size.height * (isLandscape ? 0.60 : 0.30);
+    double containerTop = size.height * (isLandscape ? 0.20 : 0.12);
     
     return Positioned(
       top: containerTop,
-      left: isLandscape ? 36 : 30,
-      right: isLandscape ? null : 30,
-      width: isLandscape ? size.width * 0.40 : null,
+      left: 36,
+      right: isLandscape ? null : 36,
+      width: isLandscape ? size.width * 0.40 : size.width - 72,
       height: textContainerHeight,
       child: IgnorePointer(
         child: ShaderMask(
@@ -385,20 +396,19 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
             controller: _scrollController,
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.only(
-              top: (size.height * (isLandscape ? 0.40 : 0.42)) - containerTop - 18,
+              top: (size.height * (isLandscape ? 0.40 : 0.26)) - containerTop - 18,
               bottom: textContainerHeight,
             ),
             itemCount: 1,
             itemBuilder: (context, index) {
               return RichText(
-                textAlign: isLandscape ? TextAlign.left : TextAlign.center,
+                textAlign: TextAlign.left, // Left-aligned matching Dribbble frames
                 text: TextSpan(
                   children: List.generate(_words.length, (wIndex) {
                     final word = _words[wIndex];
-                    final isHighlighted = wIndex == _highlightedWordIndex;
+                    final isHighlighted = _highlightImportantWords && (wIndex == _highlightedWordIndex);
                     
-                    // Highlight logic: Active word is bright white, others are faded/dimmed white30
-                    final Color wordColor = isHighlighted ? Colors.white : Colors.white30;
+                    final Color wordColor = isHighlighted ? Colors.white : Colors.white38;
                     
                     // Prefix active block with mockup's triangle pointer
                     if (isHighlighted && wIndex > 0 && _words[wIndex - 1].endsWith('.')) {
@@ -438,197 +448,135 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     );
   }
 
-  // Renders the exact UI controls, dropdowns, and buttons matching mockups
-  Widget _buildMockupControlOverlays(bool isLandscape, Size size) {
+  // Frame 5: Portrait Controls Overlay (Draggable circular guide, audio pill visualizer, action bar dock)
+  Widget _buildPortraitDribbbleControls(Size size) {
     return Stack(
       children: [
-        // 1. Top-Left Close Button (X)
+        // 1. Audio visualizer level indicator pill in bottom-left
         Positioned(
-          top: MediaQuery.of(context).padding.top + 16,
+          bottom: 120,
           left: 24,
-          child: GestureDetector(
-            onTap: widget.onBack,
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.35),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.close, color: Colors.white, size: 20),
-            ),
-          ),
-        ),
-        
-        // 2. Top-Right "Video clip A ⌵" Dropdown
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 16,
-          right: 24,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.black.withOpacity(0.50),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Video clip A',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Icon(Icons.mic, color: Colors.white, size: 14),
                 const SizedBox(width: 6),
-                const Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 16),
+                
+                // Animated sound waves
+                SizedBox(
+                  width: 32,
+                  height: 12,
+                  child: AnimatedBuilder(
+                    animation: _audioLevelController,
+                    builder: (context, child) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(4, (index) {
+                          double level = math.sin(_audioLevelController.value * math.pi + (index * 45)) * 4 + 6;
+                          return Container(
+                            width: 3,
+                            height: _isScrolling ? level : 4,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          );
+                        }),
+                      );
+                    },
+                  ),
+                )
               ],
             ),
           ),
         ),
 
-        // 3. Middle-Right Floating Red Recording Button (Landscape only)
-        if (isLandscape)
-          Positioned(
-            right: 120,
-            top: (size.height / 2) - 32,
-            child: GestureDetector(
-              onTap: _startRecordingWorkflow,
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFF2B54),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    _isRecording ? Icons.stop : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 32,
+        // 2. Central Record circular dot button
+        Positioned(
+          bottom: 110,
+          left: (size.width / 2) - 36,
+          child: GestureDetector(
+            onTap: _startRecordingWorkflow,
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+              ),
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _isRecording ? 28 : 56,
+                  height: _isRecording ? 28 : 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(_isRecording ? 6 : 28),
                   ),
                 ),
               ),
             ),
           ),
+        ),
 
-        // 4. Vertical Right Control Bar
+        // 3. Bottom horizontal translucent action dock containing icons & labels
         Positioned(
-          top: isLandscape ? size.height * 0.25 : null,
-          bottom: isLandscape ? size.height * 0.20 : MediaQuery.of(context).padding.bottom + 20,
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+          left: 24,
           right: 24,
-          left: isLandscape ? null : 24,
-          child: isLandscape 
-              ? _buildVerticalLandscapeRightBar(size)
-              : _buildHorizontalPortraitBottomBar(size),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVerticalLandscapeRightBar(Size size) {
-    return Container(
-      width: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1B1B).withOpacity(0.85),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildMockupIconButton(
-            icon: Icons.text_fields,
-            label: 'Prompter',
-            active: _showSettingsPanel,
-            onTap: () {
-              setState(() {
-                _showSettingsPanel = !_showSettingsPanel;
-              });
-            },
-          ),
-          _buildMockupIconButton(
-            icon: Icons.wb_sunny_outlined,
-            label: 'Exposure',
-            active: false,
-            onTap: () {},
-          ),
-          _buildMockupIconButton(
-            icon: Icons.settings_outlined,
-            label: 'Settings',
-            active: false,
-            onTap: _switchCamera, // Simple camera flip under settings icon
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHorizontalPortraitBottomBar(Size size) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Prompter Settings Toggle
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _showSettingsPanel = !_showSettingsPanel;
-            });
-          },
+          height: 64,
           child: Container(
-            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F1B1B).withOpacity(0.85),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white10),
+              color: Colors.black.withOpacity(0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
-            child: Icon(
-              Icons.text_fields,
-              color: _showSettingsPanel ? const Color(0xFF14C8A6) : Colors.white,
-              size: 22,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildDribbbleDockButton(
+                  icon: Icons.arrow_back_ios,
+                  label: 'Overview',
+                  active: false,
+                  onTap: widget.onBack,
+                ),
+                _buildDribbbleDockButton(
+                  icon: Icons.text_fields,
+                  label: 'Prompter',
+                  active: _showSettingsPanel,
+                  onTap: () {
+                    setState(() {
+                      _showSettingsPanel = !_showSettingsPanel;
+                    });
+                  },
+                ),
+                _buildDribbbleDockButton(
+                  icon: Icons.wb_sunny_outlined,
+                  label: 'Effects',
+                  active: false,
+                  onTap: () {},
+                ),
+                _buildDribbbleDockButton(
+                  icon: Icons.settings_outlined,
+                  label: 'Settings',
+                  active: false,
+                  onTap: _switchCamera,
+                ),
+              ],
             ),
-          ),
-        ),
-        
-        // Record Button
-        GestureDetector(
-          onTap: _startRecordingWorkflow,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFF2B54),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                _isRecording ? Icons.stop : Icons.fiber_manual_record,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-        ),
-        
-        // Camera Switcher
-        GestureDetector(
-          onTap: _switchCamera,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F1B1B).withOpacity(0.85),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white10),
-            ),
-            child: const Icon(Icons.sync, color: Colors.white, size: 22),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMockupIconButton({
+  Widget _buildDribbbleDockButton({
     required IconData icon,
     required String label,
     required bool active,
@@ -637,12 +585,12 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     return GestureDetector(
       onTap: onTap,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
-            color: active ? const Color(0xFF14C8A6) : Colors.white70,
-            size: 24,
+            color: active ? const Color(0xFF14C8A6) : Colors.white,
+            size: 20,
           ),
           const SizedBox(height: 4),
           Text(
@@ -655,6 +603,39 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
           )
         ],
       ),
+    );
+  }
+
+  // Landscape controls fallback
+  Widget _buildLandscapeMockupOverlays(Size size) {
+    return Stack(
+      children: [
+        Positioned(
+          top: 16,
+          left: 24,
+          child: GestureDetector(
+            onTap: widget.onBack,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+              child: const Icon(Icons.close, color: Colors.white, size: 20),
+            ),
+          ),
+        ),
+        Positioned(
+          right: 30,
+          top: (size.height / 2) - 30,
+          child: GestureDetector(
+            onTap: _startRecordingWorkflow,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
+              child: const Icon(Icons.videocam, color: Colors.white),
+            ),
+          ),
+        )
+      ],
     );
   }
 
@@ -674,7 +655,7 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     );
   }
 
-  // Frosted Settings drawer matching third mockup (Responsive Portrait/Landscape)
+  // Prompter settings overlay matching Dribbble details
   Widget _buildSettingsDrawerOverlay(bool isLandscape, Size size) {
     final double panelWidth = isLandscape ? size.width * 0.44 : size.width;
     final double panelHeight = isLandscape ? size.height * 0.70 : size.height * 0.46;
@@ -682,7 +663,7 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     final Widget settingsBody = Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1A1B).withOpacity(0.95), // Premium Dark Teal shade
+        color: const Color(0xFF0F1A1B).withOpacity(0.95), 
         borderRadius: isLandscape 
             ? const BorderRadius.only(topLeft: Radius.circular(24), bottomLeft: Radius.circular(24))
             : const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
@@ -715,7 +696,6 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
           ),
           const SizedBox(height: 12),
 
-          // 1. SPEED SLIDER matching mockup
           Text(
             'Speed • $_wpm words per min',
             style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
@@ -742,7 +722,6 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
           ),
           const SizedBox(height: 16),
 
-          // 2. TEXT SIZE SELECTOR CHIPS matching mockup
           Text(
             'Text size',
             style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
@@ -759,7 +738,6 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
           ),
           const SizedBox(height: 20),
 
-          // 3. HIGHLIGHT WORDS TOGGLE matching mockup
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

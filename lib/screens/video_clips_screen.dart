@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class VideoClipsScreen extends StatelessWidget {
+class VideoClipsScreen extends StatefulWidget {
   final VoidCallback onBack;
-  final VoidCallback onAskToEdit;
+  final VoidCallback onStartRecording;
 
   const VideoClipsScreen({
     super.key,
     required this.onBack,
-    required this.onAskToEdit,
+    required this.onStartRecording,
   });
+
+  @override
+  State<VideoClipsScreen> createState() => _VideoClipsScreenState();
+}
+
+class _VideoClipsScreenState extends State<VideoClipsScreen> {
+  bool _isScriptTab = true; // true = Script, false = Record
+  
+  // Controllers for mock user scripts
+  final TextEditingController _overviewController = TextEditingController();
+  final TextEditingController _clientsController = TextEditingController();
+  final TextEditingController _problemController = TextEditingController();
+
+  @override
+  void dispose() {
+    _overviewController.dispose();
+    _clientsController.dispose();
+    _problemController.dispose();
+    super.dispose();
+  }
+
+  int _getWordCount(String text) {
+    return text.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +49,11 @@ class VideoClipsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: onBack,
+                    onTap: widget.onBack,
                     child: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 18),
                   ),
                   Text(
-                    'Introduce Yourself Video',
+                    'My project',
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -42,7 +66,7 @@ class VideoClipsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // Tab toggles: Script | Record (Record active)
+            // Tab toggles matching mockups: Script | Record
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
@@ -53,35 +77,56 @@ class VideoClipsScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
+                    // Script Tab
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Center(
-                          child: Text(
-                            'Script',
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              color: Colors.black54,
-                              fontWeight: FontWeight.w600,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isScriptTab = true;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _isScriptTab ? const Color(0xFF147A6D) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Script',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: _isScriptTab ? Colors.white : Colors.black54,
+                                fontWeight: _isScriptTab ? FontWeight.bold : FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
+                    
+                    // Record Tab
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF147A6D), // Active teal
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Record',
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isScriptTab = false;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: !_isScriptTab ? const Color(0xFF147A6D) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Record',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                color: !_isScriptTab ? Colors.white : Colors.black54,
+                                fontWeight: !_isScriptTab ? FontWeight.bold : FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -93,79 +138,135 @@ class VideoClipsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+            // Toggleable Workspace Area
             Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  // Product overview
-                  Text(
-                    'Product overview',
-                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildClipCard('Video clip A'),
-                  const SizedBox(height: 24),
-
-                  // Clients
-                  Text(
-                    'Clients',
-                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildClipCard('Video clip A'),
-                  const SizedBox(height: 12),
-                  _buildClipCard('Video clip B'),
-                  const SizedBox(height: 12),
-                  _buildClipCard('Video clip C'),
-                ],
-              ),
+              child: _isScriptTab 
+                  ? _buildScriptWorkspace() 
+                  : _buildRecordWorkspace(),
             ),
-
-            // Bottom CTA Edit request button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: GestureDetector(
-                onTap: onAskToEdit,
-                child: Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF147A6D),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Ask Us to Edit Your Video',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),
     );
   }
 
-  Widget _buildClipCard(String title) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+  // Frame 3: Script Writing Workspace
+  Widget _buildScriptWorkspace() {
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      children: [
+        _buildScriptInputField('Product overview', _overviewController),
+        const SizedBox(height: 20),
+        _buildScriptInputField('Clients', _clientsController),
+        const SizedBox(height: 20),
+        _buildScriptInputField('Problem', _problemController),
+        const SizedBox(height: 24),
+        
+        // Add new video clip green button
+        GestureDetector(
+          onTap: () {},
+          child: Row(
             children: [
-              const Icon(Icons.play_arrow, color: Colors.black87, size: 18),
-              const SizedBox(width: 8),
+              const Icon(Icons.add, color: Color(0xFF147A6D), size: 16),
+              const SizedBox(width: 6),
+              Text(
+                'Add a new video clip',
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF147A6D),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildScriptInputField(String sectionTitle, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              sectionTitle,
+              style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const Icon(Icons.lightbulb_outline, color: Colors.black38, size: 16),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                controller: controller,
+                maxLines: 4,
+                onChanged: (val) => setState(() {}),
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Type your clip content here...',
+                  hintStyle: TextStyle(color: Colors.black12, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${_getWordCount(controller.text)} / 2500',
+                style: GoogleFonts.outfit(fontSize: 10, color: Colors.black26),
+              )
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  // Frame 4: Record Video Clips list Workspace
+  Widget _buildRecordWorkspace() {
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      children: [
+        _buildRecordClipCard('Product overview', 'Video clip A'),
+        const SizedBox(height: 16),
+        _buildRecordClipCard('Clients', 'Video clip A'),
+        const SizedBox(height: 16),
+        _buildRecordClipCard('Problem', 'Video clip A'),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildRecordClipCard(String category, String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          category,
+          style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
                 title,
                 style: GoogleFonts.outfit(
@@ -173,12 +274,30 @@ class VideoClipsScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
-              )
+              ),
+              
+              // Red Record Action Button
+              GestureDetector(
+                onTap: widget.onStartRecording,
+                child: Row(
+                  children: [
+                    const Icon(Icons.fiber_manual_record, color: Color(0xFFEF4444), size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Record',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFEF4444),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
+                ),
+              ),
             ],
           ),
-          const Icon(Icons.more_vert, color: Colors.black26, size: 18),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
