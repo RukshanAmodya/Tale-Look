@@ -1015,6 +1015,10 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
   int _highlightedWordIndex = 0;
   List<String> _words = [];
   
+  // Draggable Face Tracker Coordinates
+  double _faceGuideX = 0.5;
+  double _faceGuideY = 0.4;
+  
   // Navigation tabs state matching screenshot
   bool _isTabReading = true; // true = Reading, false = Preview
   
@@ -1315,98 +1319,95 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
     );
   }
 
-  // Face tracker guideline custom painter overlay matching screenshots
+  // Face tracker guideline custom painter overlay matching screenshots (Draggable)
   Widget _buildFaceGuidelineOverlay() {
     return Positioned.fill(
-      child: IgnorePointer(
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          final size = MediaQuery.of(context).size;
+          setState(() {
+            _faceGuideX = (_faceGuideX + details.delta.dx / size.width).clamp(0.1, 0.9);
+            _faceGuideY = (_faceGuideY + details.delta.dy / size.height).clamp(0.1, 0.9);
+          });
+        },
         child: CustomPaint(
-          painter: FaceGuidelinePainter(),
+          painter: FaceGuidelinePainter(
+            centerX: _faceGuideX,
+            centerY: _faceGuideY,
+          ),
         ),
       ),
     );
   }
 
-  // Horizontal dashed red target line guide
+  // Horizontal dashed red target line guide (Removed)
   Widget _buildRedDashedLineGuide(Size size) {
-    // Red guideline aligned with reading text box
-    return Positioned(
-      top: size.height * 0.40,
-      left: 10,
-      right: 10,
-      child: IgnorePointer(
-        child: Row(
-          children: List.generate(40, (index) {
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                height: 1.5,
-                color: const Color(0xFFFF2B54).withOpacity(0.8),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildTeleprompterOverlay(Size size) {
     double textContainerHeight = size.height * 0.35;
     double containerTop = size.height * 0.25;
     
-    // We split current segment and render with active highlighting
     return Positioned(
       top: containerTop,
       left: 30,
       right: 30,
       height: textContainerHeight,
       child: IgnorePointer(
-        child: ShaderMask(
-          shaderCallback: (rect) {
-            return const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.white,
-                Colors.white,
-                Colors.transparent,
-              ],
-              stops: [0.0, 0.25, 0.75, 1.0],
-            ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
-          },
-          blendMode: BlendMode.dstIn,
-          child: ListView.builder(
-            controller: _scrollController,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.only(
-              top: (size.height * 0.40) - containerTop - 18,
-              bottom: textContainerHeight,
-            ),
-            itemCount: 1,
-            itemBuilder: (context, index) {
-              return RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  children: List.generate(_words.length, (wIndex) {
-                    final word = _words[wIndex];
-                    final isHighlighted = wIndex == _highlightedWordIndex;
-                    
-                    // Highlight active word in Red, other words in white/grey
-                    return TextSpan(
-                      text: '$word ',
-                      style: _getDynamicStyle(
-                        word, 
-                        _fontSize, 
-                        isHighlighted ? const Color(0xFFFF2B54) : Colors.white70
-                      ).copyWith(
-                        fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
-                        backgroundColor: isHighlighted ? Colors.black54 : Colors.transparent,
-                      ),
-                    );
-                  }),
-                ),
-              );
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.65), // Translucent black backdrop shade
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.08), width: 1.2),
+          ),
+          child: ShaderMask(
+            shaderCallback: (rect) {
+              return const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: [0.0, 0.15, 0.85, 1.0],
+              ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
             },
+            blendMode: BlendMode.dstIn,
+            child: ListView.builder(
+              controller: _scrollController,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.only(
+                top: (size.height * 0.42) - containerTop - 18,
+                bottom: textContainerHeight,
+              ),
+              itemCount: 1,
+              itemBuilder: (context, index) {
+                return RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: List.generate(_words.length, (wIndex) {
+                      final word = _words[wIndex];
+                      final isHighlighted = wIndex == _highlightedWordIndex;
+                      
+                      return TextSpan(
+                        text: '$word ',
+                        style: _getDynamicStyle(
+                          word, 
+                          _fontSize, 
+                          isHighlighted ? const Color(0xFFFF2B54) : Colors.white70
+                        ).copyWith(
+                          fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+                          // Faded clean text styling with NO highlighted background box
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -1662,8 +1663,13 @@ class _CameraReadingScreenState extends State<CameraReadingScreen> with TickerPr
   }
 }
 
-// Custom Painter to draw circular guideline matching screenshots
+// Custom Painter to draw circular guideline matching screenshots (Un-squished & Draggable)
 class FaceGuidelinePainter extends CustomPainter {
+  final double centerX;
+  final double centerY;
+
+  FaceGuidelinePainter({required this.centerX, required this.centerY});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -1671,22 +1677,26 @@ class FaceGuidelinePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    // Draw elliptical target guideline at the center third height
+    // Use shortestSide to prevent horizontal oval squishing in landscape!
+    final shortestSide = size.shortestSide;
+    
     final rect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height * 0.40),
-      width: size.width * 0.72,
-      height: size.height * 0.42,
+      center: Offset(size.width * centerX, size.height * centerY),
+      width: shortestSide * 0.72,
+      height: shortestSide * 0.88, // standing oval format
     );
     canvas.drawOval(rect, paint);
     
-    // Draw fine vertical axis guidelines
+    // Draw fine vertical axis guidelines relative to dynamic center
     canvas.drawLine(
-      Offset(size.width / 2, size.height * 0.19),
-      Offset(size.width / 2, size.height * 0.61),
+      Offset(size.width * centerX, size.height * (centerY - 0.2)),
+      Offset(size.width * centerX, size.height * (centerY + 0.2)),
       paint,
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant FaceGuidelinePainter oldDelegate) {
+    return oldDelegate.centerX != centerX || oldDelegate.centerY != centerY;
+  }
 }
