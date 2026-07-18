@@ -2,6 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:telelook/models/script.dart';
+import 'package:telelook/screens/home_screen.dart';
+import 'package:telelook/screens/all_templates_screen.dart';
+import 'package:telelook/screens/project_details_screen.dart';
+import 'package:telelook/screens/video_clips_screen.dart';
+import 'package:telelook/screens/wizard_screens.dart';
 import 'package:telelook/screens/scripts_list_screen.dart';
 import 'package:telelook/screens/edit_script_screen.dart';
 import 'package:telelook/screens/camera_reading_screen.dart';
@@ -9,9 +14,15 @@ import 'package:telelook/screens/splash_screen.dart';
 
 enum AppScreen {
   splash,
+  home,
+  allTemplates,
+  projectDetails,
   scriptsList,
   editScript,
-  teleprompter
+  teleprompter,
+  videoClipsList,
+  wizardStep1,
+  wizardStep2
 }
 
 Future<void> main() async {
@@ -36,17 +47,18 @@ class TaleLookApp extends StatelessWidget {
     return MaterialApp(
       title: 'Tale Look',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        primaryColor: const Color(0xFFFF2B54),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFF2B54),
-          secondary: Color(0xFF39FF14),
-          surface: Color(0xFF0B0B0C),
+      themeMode: ThemeMode.light, // Set default to light theme to match white/teal layouts
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF5F4F0),
+        primaryColor: const Color(0xFF147A6D), // Teal brand primary color
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF147A6D),
+          secondary: Color(0xFF14C8A6),
+          surface: Colors.white,
         ),
       ),
+      darkTheme: ThemeData.dark(),
       home: const TeleprompterNavigationFlow(),
     );
   }
@@ -110,7 +122,47 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
     switch (_currentScreen) {
       case AppScreen.splash:
         return SplashScreen(
-          onFinished: () => _navigateTo(AppScreen.scriptsList),
+          onFinished: () => _navigateTo(AppScreen.home), // Route to Home Screen after splash
+        );
+      case AppScreen.home:
+        return HomeScreen(
+          onSelectProject: () => _navigateTo(AppScreen.projectDetails),
+          onSeeTemplates: () => _navigateTo(AppScreen.allTemplates),
+        );
+      case AppScreen.allTemplates:
+        return AllTemplatesScreen(
+          onBack: () => _navigateTo(AppScreen.home),
+          onSelectTemplate: () => _navigateTo(AppScreen.projectDetails),
+        );
+      case AppScreen.projectDetails:
+        return ProjectDetailsScreen(
+          onBack: () => _navigateTo(AppScreen.home),
+          onWriteScript: () => _navigateTo(AppScreen.editScript),
+          onRecordClips: () => _navigateTo(AppScreen.videoClipsList),
+        );
+      case AppScreen.videoClipsList:
+        return VideoClipsScreen(
+          onBack: () => _navigateTo(AppScreen.projectDetails),
+          onAskToEdit: () => _navigateTo(AppScreen.wizardStep1),
+        );
+      case AppScreen.wizardStep1:
+        return WizardStep1Screen(
+          onBack: () => _navigateTo(AppScreen.videoClipsList),
+          onNext: () => _navigateTo(AppScreen.wizardStep2),
+        );
+      case AppScreen.wizardStep2:
+        return WizardStep2Screen(
+          onBack: () => _navigateTo(AppScreen.wizardStep1),
+          onSubmit: () {
+            // Show submit confirmation
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Brand guidelines submitted successfully!'),
+                backgroundColor: Color(0xFF147A6D),
+              ),
+            );
+            _navigateTo(AppScreen.home);
+          },
         );
       case AppScreen.scriptsList:
         return ScriptsListScreen(
@@ -153,7 +205,7 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
             setState(() {
               _scripts[_activeScriptIndex] = updatedScript;
             });
-            _navigateTo(AppScreen.scriptsList);
+            _navigateTo(AppScreen.projectDetails);
           },
           onStartReading: (updatedScript) {
             setState(() {
@@ -162,14 +214,14 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
             _navigateTo(AppScreen.teleprompter);
           },
           onCancel: () {
-            _navigateTo(AppScreen.scriptsList);
+            _navigateTo(AppScreen.projectDetails);
           },
         );
       case AppScreen.teleprompter:
         return CameraReadingScreen(
           script: _scripts[_activeScriptIndex],
           onBack: () {
-            _navigateTo(AppScreen.scriptsList);
+            _navigateTo(AppScreen.videoClipsList);
           },
         );
     }
