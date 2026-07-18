@@ -4,17 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 class HomeScreen extends StatelessWidget {
   final VoidCallback onSelectProject;
   final VoidCallback onSeeTemplates;
+  final VoidCallback onSelectAbout;
+  final VoidCallback onSelectPrivacy;
 
   const HomeScreen({
     super.key,
     required this.onSelectProject,
     required this.onSeeTemplates,
+    required this.onSelectAbout,
+    required this.onSelectPrivacy,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F4F0), // Cream white background
+      backgroundColor: const Color(0xFFF5F4F0),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -34,14 +38,37 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                  
+                  // Production-Ready Settings Menu Button
+                  PopupMenuButton<String>(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.settings, color: Colors.black, size: 18),
                     ),
-                    child: const Icon(Icons.chat_bubble_outline, color: Colors.black, size: 20),
-                  )
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onSelected: (val) {
+                      if (val == 'about') {
+                        onSelectAbout();
+                      } else if (val == 'privacy') {
+                        onSelectPrivacy();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'about',
+                        child: Text('About QuestraX', style: GoogleFonts.outfit(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+                      PopupMenuItem(
+                        value: 'privacy',
+                        child: Text('Privacy Policy', style: GoogleFonts.outfit(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -67,7 +94,7 @@ class HomeScreen extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F322E), // Dark Teal background
+                    color: const Color(0xFF0F322E),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -120,11 +147,11 @@ class HomeScreen extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   children: [
-                    _buildContentPlanCard('Introduce yourself', '3 templates', const Color(0xFFFF9E1B)), // Orange
+                    _buildContentPlanCard('Introduce yourself', '3 templates', const Color(0xFFFF9E1B)),
                     const SizedBox(width: 16),
-                    _buildContentPlanCard('Explain a topic', '8 templates', const Color(0xFFFADE32)), // Yellow
+                    _buildContentPlanCard('Explain a topic', '8 templates', const Color(0xFFFADE32)),
                     const SizedBox(width: 16),
-                    _buildContentPlanCard('Pitch product', '5 templates', const Color(0xFFBB9CFF)), // Purple
+                    _buildContentPlanCard('Pitch product', '5 templates', const Color(0xFFBB9CFF)),
                   ],
                 ),
               ),

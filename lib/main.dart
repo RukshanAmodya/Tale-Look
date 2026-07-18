@@ -11,6 +11,8 @@ import 'package:telelook/screens/scripts_list_screen.dart';
 import 'package:telelook/screens/edit_script_screen.dart';
 import 'package:telelook/screens/camera_reading_screen.dart';
 import 'package:telelook/screens/splash_screen.dart';
+import 'package:telelook/screens/about_screen.dart';
+import 'package:telelook/screens/privacy_policy_screen.dart';
 
 enum AppScreen {
   splash,
@@ -22,7 +24,9 @@ enum AppScreen {
   teleprompter,
   videoClipsList,
   wizardStep1,
-  wizardStep2
+  wizardStep2,
+  about,
+  privacy
 }
 
 Future<void> main() async {
@@ -47,11 +51,11 @@ class TaleLookApp extends StatelessWidget {
     return MaterialApp(
       title: 'Tale Look',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.light, // Set default to light theme to match white/teal layouts
+      themeMode: ThemeMode.light,
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF5F4F0),
-        primaryColor: const Color(0xFF147A6D), // Teal brand primary color
+        primaryColor: const Color(0xFF147A6D), 
         colorScheme: const ColorScheme.light(
           primary: Color(0xFF147A6D),
           secondary: Color(0xFF14C8A6),
@@ -79,7 +83,7 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
   @override
   void initState() {
     super.initState();
-    // Default mock data matching the screenshot cards
+    // Default initial mock templates
     _scripts = [
       TeleprompterScript(
         id: 'welcome_speech',
@@ -122,12 +126,14 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
     switch (_currentScreen) {
       case AppScreen.splash:
         return SplashScreen(
-          onFinished: () => _navigateTo(AppScreen.home), // Route to Home Screen after splash
+          onFinished: () => _navigateTo(AppScreen.home),
         );
       case AppScreen.home:
         return HomeScreen(
           onSelectProject: () => _navigateTo(AppScreen.projectDetails),
           onSeeTemplates: () => _navigateTo(AppScreen.allTemplates),
+          onSelectAbout: () => _navigateTo(AppScreen.about),
+          onSelectPrivacy: () => _navigateTo(AppScreen.privacy),
         );
       case AppScreen.allTemplates:
         return AllTemplatesScreen(
@@ -154,7 +160,6 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
         return WizardStep2Screen(
           onBack: () => _navigateTo(AppScreen.wizardStep1),
           onSubmit: () {
-            // Show submit confirmation
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Brand guidelines submitted successfully!'),
@@ -163,6 +168,14 @@ class _TeleprompterNavigationFlowState extends State<TeleprompterNavigationFlow>
             );
             _navigateTo(AppScreen.home);
           },
+        );
+      case AppScreen.about:
+        return AboutScreen(
+          onBack: () => _navigateTo(AppScreen.home),
+        );
+      case AppScreen.privacy:
+        return PrivacyPolicyScreen(
+          onBack: () => _navigateTo(AppScreen.home),
         );
       case AppScreen.scriptsList:
         return ScriptsListScreen(

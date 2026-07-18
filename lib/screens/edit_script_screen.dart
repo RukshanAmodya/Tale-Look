@@ -77,10 +77,11 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF5F4F0),
       body: SafeArea(
         child: Column(
           children: [
+            // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               child: Row(
@@ -91,10 +92,10 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(
-                        color: Colors.white10,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      child: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
                     ),
                   ),
                   Text(
@@ -102,7 +103,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                   GestureDetector(
@@ -110,15 +111,17 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(
-                        color: Colors.white10,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 20),
+                      child: const Icon(Icons.check, color: Colors.black, size: 20),
                     ),
                   ),
                 ],
               ),
             ),
+            
+            // Editable Form
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -131,20 +134,22 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Welcome speech',
-                        hintStyle: TextStyle(color: Colors.white24),
+                        hintStyle: TextStyle(color: Colors.black26),
                       ),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       'Dec 9 • ${_editedScript.wordCount} words • ${_editedScript.durationString}',
-                      style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                      style: GoogleFonts.outfit(color: Colors.black38, fontSize: 13),
                     ),
                     const SizedBox(height: 30),
+                    
+                    // Segments
                     ListView.builder(
                       itemCount: _editedScript.segments.length,
                       shrinkWrap: true,
@@ -159,25 +164,27 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                             : _buildCompactSegmentBlock(index, segment, controller);
                       },
                     ),
+                    
                     const SizedBox(height: 15),
                     GestureDetector(
                       onTap: _addNewSegment,
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
+                          color: const Color(0xFF147A6D).withOpacity(0.06),
                           borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFF147A6D).withOpacity(0.2), width: 1.2),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.add, color: Colors.white60, size: 18),
+                            const Icon(Icons.add, color: Color(0xFF147A6D), size: 18),
                             const SizedBox(width: 6),
                             Text(
                               'Segment',
                               style: GoogleFonts.outfit(
-                                color: Colors.white60,
-                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF147A6D),
+                                fontWeight: FontWeight.bold,
                               ),
                             )
                           ],
@@ -189,6 +196,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                 ),
               ),
             ),
+            
             _buildBottomActionPanel(),
           ],
         ),
@@ -208,11 +216,11 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
               width: 18,
               height: 18,
               decoration: const BoxDecoration(
-                color: Color(0xFF0F321C),
+                color: Color(0xFFE8F6F4),
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Icon(Icons.arrow_right_alt, color: Color(0xFF39FF14), size: 10),
+                child: Icon(Icons.arrow_right_alt, color: Color(0xFF147A6D), size: 10),
               ),
             ),
           ),
@@ -230,7 +238,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                   Text(
                     segment.title,
                     style: GoogleFonts.outfit(
-                      color: Colors.white38,
+                      color: Colors.black45,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -240,7 +248,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                     controller.text.isNotEmpty ? controller.text : 'Tap to write...',
                     style: TextStyle(
                       fontFamily: RegExp(r'[\u0D80-\u0DFF]').hasMatch(controller.text) ? 'SinhalaSangam' : null,
-                      color: controller.text.isNotEmpty ? Colors.white : Colors.white24,
+                      color: controller.text.isNotEmpty ? Colors.black87 : Colors.black26,
                       fontSize: 16,
                       height: 1.45,
                     ),
@@ -259,9 +267,15 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF141416),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: const Color(0xFF147A6D).withOpacity(0.12), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +285,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
             children: [
               Text(
                 'Editing Segment',
-                style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12),
+                style: GoogleFonts.outfit(color: Colors.black38, fontSize: 12),
               ),
               GestureDetector(
                 onTap: () {
@@ -281,7 +295,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                 },
                 child: Text(
                   'Done',
-                  style: GoogleFonts.outfit(color: const Color(0xFFFF2B54), fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(color: const Color(0xFF147A6D), fontWeight: FontWeight.bold),
                 ),
               )
             ],
@@ -289,13 +303,13 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
           const SizedBox(height: 10),
           TextFormField(
             initialValue: segment.title,
-            style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 16),
+            style: GoogleFonts.outfit(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
             decoration: const InputDecoration(
               isDense: true,
               labelText: 'Segment Label',
-              labelStyle: TextStyle(color: Colors.white24),
-              border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF2B54))),
+              labelStyle: TextStyle(color: Colors.black38),
+              border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black12)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF147A6D))),
             ),
             onChanged: (val) {
               segment.title = val;
@@ -305,11 +319,11 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
           TextField(
             controller: controller,
             maxLines: null,
-            style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
+            style: const TextStyle(color: Colors.black87, fontSize: 15, height: 1.45),
             decoration: const InputDecoration(
               border: InputBorder.none,
               hintText: 'Type script details...',
-              hintStyle: TextStyle(color: Colors.white24),
+              hintStyle: TextStyle(color: Colors.black26),
             ),
           ),
           const SizedBox(height: 20),
@@ -320,15 +334,15 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
               ...List.generate(segment.emotions.length, (emoIndex) {
                 final emo = segment.emotions[emoIndex];
                 return Chip(
-                  label: Text(emo, style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70)),
-                  backgroundColor: const Color(0xFF1A1528),
-                  side: const BorderSide(color: Colors.white10),
+                  label: Text(emo, style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF147A6D))),
+                  backgroundColor: const Color(0xFF147A6D).withOpacity(0.08),
+                  side: const BorderSide(color: Colors.transparent),
                   onDeleted: () {
                     setState(() {
                       segment.emotions.removeAt(emoIndex);
                     });
                   },
-                  deleteIcon: const Icon(Icons.close, size: 12, color: Colors.white30),
+                  deleteIcon: const Icon(Icons.close, size: 12, color: Color(0xFF147A6D)),
                 );
               }),
               GestureDetector(
@@ -336,10 +350,10 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                   _addEmotionTag(segment);
                 },
                 child: Chip(
-                  avatar: const Icon(Icons.add, color: Colors.white38, size: 12),
-                  label: Text('Emotion', style: GoogleFonts.outfit(fontSize: 12, color: Colors.white38)),
+                  avatar: const Icon(Icons.add, color: Colors.black38, size: 12),
+                  label: Text('Emotion', style: GoogleFonts.outfit(fontSize: 12, color: Colors.black38)),
                   backgroundColor: Colors.transparent,
-                  side: const BorderSide(color: Colors.white24),
+                  side: const BorderSide(color: Colors.black26),
                 ),
               )
             ],
@@ -350,7 +364,7 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
             children: [
               Text(
                 'Simulate voice dictation',
-                style: GoogleFonts.outfit(fontSize: 12, color: Colors.white30),
+                style: GoogleFonts.outfit(fontSize: 12, color: Colors.black38),
               ),
               GestureDetector(
                 onTap: () {
@@ -361,10 +375,10 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: Color(0xFF147A6D),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.mic, color: Colors.black, size: 14),
+                  child: const Icon(Icons.mic, color: Colors.white, size: 14),
                 ),
               )
             ],
@@ -380,20 +394,20 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E24),
-          title: Text('Add Emotion/Tone Tag', style: GoogleFonts.outfit()),
+          backgroundColor: Colors.white,
+          title: Text('Add Emotion/Tone Tag', style: GoogleFonts.outfit(color: Colors.black87)),
           content: TextField(
             controller: controller,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.black87),
             decoration: const InputDecoration(
               hintText: 'e.g. confident, excited, bold',
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF2B54))),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF147A6D))),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Colors.black54)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -404,8 +418,8 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
                   Navigator.pop(context);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF2B54)),
-              child: const Text('Add'),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147A6D)),
+              child: const Text('Add', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -422,12 +436,18 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
         bottom: MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF0F0F10),
+        color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
-        border: Border(top: BorderSide(color: Colors.white10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          )
+        ]
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -437,14 +457,14 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
             child: Container(
               height: 54,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFF147A6D),
                 borderRadius: BorderRadius.circular(27),
               ),
               child: Center(
                 child: Text(
                   'Start reading',
                   style: GoogleFonts.outfit(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -460,13 +480,13 @@ class _EditScriptScreenState extends State<EditScriptScreen> {
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(27),
-                border: Border.all(color: Colors.white24, width: 1.5),
+                border: Border.all(color: const Color(0xFF147A6D), width: 1.5),
               ),
               child: Center(
                 child: Text(
                   'Save & Exit',
                   style: GoogleFonts.outfit(
-                    color: Colors.white,
+                    color: const Color(0xFF147A6D),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

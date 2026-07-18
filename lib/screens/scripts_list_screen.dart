@@ -19,25 +19,26 @@ class ScriptsListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF5F4F0),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () => Navigator.maybePop(context),
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(
-                        color: Colors.white10,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      child: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
                     ),
                   ),
                   Text(
@@ -45,7 +46,7 @@ class ScriptsListScreen extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                   GestureDetector(
@@ -53,41 +54,35 @@ class ScriptsListScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(
-                        color: Colors.white10,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.search, color: Colors.white, size: 20),
+                      child: const Icon(Icons.search, color: Colors.black, size: 20),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 30),
+              
+              // Scrollable list of cards
               Expanded(
                 child: ListView.builder(
                   itemCount: scripts.length,
                   physics: const BouncingScrollPhysics(),
                   itemBuilder: (context, index) {
                     final script = scripts[index];
-                    
-                    final List<Color> gradientColors = index % 2 == 0
-                        ? [const Color(0xFF1E133F), const Color(0xFF0F0B1A), const Color(0xFF121422)]
-                        : [const Color(0xFF0F2B22), const Color(0xFF0B1411), const Color(0xFF111422)];
                         
                     return Container(
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: gradientColors,
-                        ),
-                        border: Border.all(color: Colors.white.withOpacity(0.08), width: 1.5),
+                        border: Border.all(color: const Color(0xFF147A6D).withOpacity(0.08), width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           )
                         ]
                       ),
@@ -101,7 +96,7 @@ class ScriptsListScreen extends StatelessWidget {
                               Text(
                                 'Dec 9 • ${script.wordCount} words • ${script.durationString}',
                                 style: GoogleFonts.outfit(
-                                  color: Colors.white38,
+                                  color: Colors.black38,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -111,7 +106,7 @@ class ScriptsListScreen extends StatelessWidget {
                                 child: Text(
                                   'Edit',
                                   style: GoogleFonts.outfit(
-                                    color: Colors.white,
+                                    color: const Color(0xFF147A6D),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
@@ -121,10 +116,11 @@ class ScriptsListScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 18),
+                          
                           Text(
                             script.title,
                             style: GoogleFonts.outfit(
-                              color: Colors.white,
+                              color: Colors.black87,
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
@@ -136,28 +132,29 @@ class ScriptsListScreen extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: RegExp(r'[\u0D80-\u0DFF]').hasMatch(script.segments.first.content) ? 'SinhalaSangam' : null,
-                              color: Colors.white54,
+                              color: Colors.black54,
                               fontSize: 15,
                               height: 1.4,
                             ),
                           ),
                           const SizedBox(height: 24),
+                          
                           Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.08),
+                                  color: const Color(0xFF147A6D).withOpacity(0.08),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white12),
                                 ),
                                 child: const Icon(
                                   Icons.auto_awesome, 
-                                  color: Colors.white, 
+                                  color: Color(0xFF147A6D), 
                                   size: 18,
                                 ),
                               ),
                               const SizedBox(width: 12),
+                              
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () => onSelectScript(index),
@@ -165,8 +162,7 @@ class ScriptsListScreen extends StatelessWidget {
                                     height: 48,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(24),
-                                      border: Border.all(color: Colors.white30, width: 1.2),
-                                      color: Colors.black26,
+                                      color: const Color(0xFF147A6D),
                                     ),
                                     child: Center(
                                       child: Text(
@@ -193,12 +189,13 @@ class ScriptsListScreen extends StatelessWidget {
           ),
         ),
       ),
+      
       floatingActionButton: FloatingActionButton(
         onPressed: onCreateScript,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF147A6D),
         elevation: 4,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.black, size: 28),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }
