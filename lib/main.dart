@@ -860,16 +860,8 @@ class _MainTeleprompterScreenState extends State<MainTeleprompterScreen> with Ti
       );
     }
     
-    final cameraValue = _cameraController!.value;
-    double scale = size.aspectRatio * cameraValue.aspectRatio;
-    if (scale < 1) scale = 1 / scale;
-
-    return Transform.scale(
-      scale: scale,
-      alignment: Alignment.center,
-      child: Center(
-        child: CameraPreview(_cameraController!),
-      ),
+    return Center(
+      child: CameraPreview(_cameraController!),
     );
   }
 
